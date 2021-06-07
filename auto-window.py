@@ -5,7 +5,7 @@
 # Description: X11 only minimal python script for getting window names and stats
 # Author: silipwn (contact at as-hw.in)
 # Date: 2021-06-07T17:33:50+0530
-# Last Modification Date: 2021-06-07T17:50:35+0530
+# Last Modification Date: 2021-06-07T19:11:10+0530
 #           By: silipwn
 # URL:
 # Junk place
@@ -13,6 +13,9 @@
 
 import subprocess
 import re
+import argparse
+import time
+import json
 
 
 # Source: https://stackoverflow.com/questions/3983946/get-active-window-title-in-x
@@ -32,7 +35,7 @@ def get_active_window_title():
 
     match = re.match(b"WM_NAME\(\w+\) = (?P<name>.+)$", stdout)
     if match != None:
-        return match.group("name").decode('utf-8').replace('"','')
+        return match.group("name").decode('utf-8').replace('"', '')
 
     return None
 
@@ -54,7 +57,7 @@ def get_all_titles():
 
         if stdout:
             output = stdout.decode('utf-8').split('=')[1]
-            name = output.replace('"','').strip()
+            name = output.replace('"', '').strip()
             titles.append(name)
         else:
             print('Error occured')
@@ -62,9 +65,44 @@ def get_all_titles():
 
     return titles
 
+
+def event(output_file):
+    # Get time
+    json_data = {}
+    with open(output_file, 'a+') as json_file:
+        current_time = time.localtime()
+        timestamp = time.strftime("%FT%T%z", current_time)
+        json_data[timestamp] = {}
+        titles = get_all_titles()
+        json_data[timestamp]['Applications'] = titles
+        # print('Printing a list of windows')
+        # for index in titles:
+        #     print(index)
+        # print('The active window is :{0}'.format(get_active_window_title()))
+        json_data[timestamp]['Active'] = get_active_window_title()
+        json.dump(json_data, json_file)
+        json_file.write('\n')
+        print('Dumped values into {0} for time {1}'.format(
+            output_file, timestamp))
+
+
 if __name__ == "__main__":
-    titles=get_all_titles()
-    print('Priting a list of windows')
-    for index in titles:
-        print(index)
-    print('The active window is :{0}'.format(get_active_window_title()))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("sample_time",
+                        help="Sampling time (seconds) for the script")
+    parser.add_argument("-o",
+                        "--output",
+                        action="store",
+                        type=str,
+                        help="Output file for JSON")
+    args = parser.parse_args()
+    if args.output:
+        output_file = args.output
+    else:
+        output_file = 'thyme.json'
+    starttime = time.time()
+    while True:
+        event(output_file)
+        time.sleep(
+            int(args.sample_time) -
+            ((time.time() - starttime) % int(args.sample_time)))
