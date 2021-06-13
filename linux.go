@@ -1,3 +1,11 @@
+/**
+ * Finis coronat opus; Run at your own peril;
+ * File              : linux.go
+ * License           : BSD-3-Clause
+ * Author            : silipwn <(contact at as-hw.in)>
+ * Date              : 2021-06-07T17:29:24+0530
+ * Last Modified Date: 2021-06-07T17:32:24+0530
+ */
 package thyme
 
 import (
@@ -188,3 +196,4 @@ func parseWinDim(rx *regexp.Regexp, out string, varname string) (int, error) {
 	}
 
 }
+MAC
